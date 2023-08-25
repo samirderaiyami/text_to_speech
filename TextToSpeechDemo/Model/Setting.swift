@@ -15,6 +15,16 @@ class Setting {
     var speakAsYouType: Bool = false
     var highlightText: Bool = false
     var delay: Double = 0.0
-    var fontSize: Int = 25
+    var fontSize: Int = 17
     var recentPhrase: Bool = false
+}
+
+struct Fonts {
+    
+    //.. Used In App
+    static let SFProRoundedBold = "SFProRounded-Bold"
+    static let SFProRoundedSemibold = "SFProRounded-Semibold"
+    static let SFProRoundedLight = "SFProRounded-Light"
+    static let SFProRoundedRegular = "SFProRounded-Regular"
+    static let SFProTextRegularItalic = "SFProText-RegularItalic"
 }

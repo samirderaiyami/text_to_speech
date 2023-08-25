@@ -47,6 +47,11 @@ class VoicesVC: UIViewController {
         listVoices()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.speechSynthesizer.stopSpeaking(at: .immediate)
+    }
+    
     func textToSpeech(text: String, id: String) {
         let speechUtterance = AVSpeechUtterance(string: text)
         speechUtterance.voice = AVSpeechSynthesisVoice(identifier: id)
