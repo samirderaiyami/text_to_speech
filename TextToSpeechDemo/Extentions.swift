@@ -597,3 +597,23 @@ extension UIColor {
         )
     }
 }
+extension String {
+    func imageWithRoundedBackground(color: UIColor, cornerRadius: CGFloat, font: UIFont) -> UIImage? {
+        let string = NSAttributedString(string: self, attributes: [
+            .font: font,
+            .backgroundColor: color
+        ])
+        let size = string.size()
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        let context = UIGraphicsGetCurrentContext()
+        context?.setFillColor(UIColor.clear.cgColor)
+        context?.fill(CGRect(origin: .zero, size: size))
+        let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: cornerRadius)
+        color.setFill()
+        path.fill()
+        string.draw(at: .zero)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image
+    }
+}

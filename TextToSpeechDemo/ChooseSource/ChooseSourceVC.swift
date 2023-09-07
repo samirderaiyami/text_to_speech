@@ -34,7 +34,7 @@ class ChooseSourceVC: UIViewController {
 
         } else if sender.tag == 2 {
             //.. Copy, Paste or Write Text
-            let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookVC") as! BookVC
+            let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookTestVC") as! BookTestVC
             vc.sourceType = .copyPaste
             self.navigationController?.pushViewController(vc, animated: true)
 
