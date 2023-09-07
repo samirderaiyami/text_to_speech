@@ -618,9 +618,10 @@ extension BookVC: SettingsDelegate {
 }
 
 extension BookVC: VoiceDelegate {
-    func voiceSelected(voice: Voice) {
+    func voiceSelected(selectedMainVoice: AVSpeechSynthesisVoice, voice: Voice) {
         setting?.voice = voice
     }
+    
 }
 
 class RoundedBackgroundLayoutManager: NSLayoutManager {

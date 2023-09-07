@@ -17,7 +17,7 @@ struct Voice {
 }
 
 protocol VoiceDelegate {
-    func voiceSelected(voice: Voice)
+    func voiceSelected(selectedMainVoice: AVSpeechSynthesisVoice, voice: Voice)
 }
 class VoicesVC: UIViewController {
     
@@ -25,7 +25,7 @@ class VoicesVC: UIViewController {
     let speechSynthesizer = AVSpeechSynthesizer()
     var arrVoices: [Voice] = []
     var index: Int = 0
-    
+    var arrAVSpeechSynthesisVoices: [AVSpeechSynthesisVoice] = []
     // set the speaking speed
     var utteranceRate = 0.5
     
@@ -65,6 +65,7 @@ class VoicesVC: UIViewController {
     func listVoices() {
         let voices = AVSpeechSynthesisVoice.speechVoices()
         for voice in voices {
+            arrAVSpeechSynthesisVoices.append(voice)
             arrVoices.append(Voice(identifier: voice.identifier, language: voice.language, name: voice.name, quality: voice.quality.rawValue))
             print("\(debugPrint(voice))")
             
@@ -109,8 +110,12 @@ extension VoicesVC: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        delegate?.voiceSelected(voice: arrVoices[indexPath.row])
-        self.navigationController?.popViewController(animated: true)
+        if let index = self.arrAVSpeechSynthesisVoices.firstIndex(where: {$0.identifier == arrVoices[indexPath.row].identifier}) {
+            delegate?.voiceSelected(selectedMainVoice: arrAVSpeechSynthesisVoices[index],voice: arrVoices[indexPath.row])
+            self.navigationController?.popViewController(animated: true)
+        }
+        
+        
     }
     
 }

@@ -97,17 +97,16 @@ class SettingsVC: UIViewController {
 
 extension SettingsVC {
     @IBAction func btnVoiceClicks(sender: UIButton) {
-        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "VoicesVC") as? VoicesVC
-        vc?.delegate = self
-        self.navigationController?.pushViewController(vc!, animated: true)
+//        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "VoicesVC") as? VoicesVC
+//        vc?.delegate = self
+//        self.navigationController?.pushViewController(vc!, animated: true)
     }
 }
 
-extension SettingsVC: VoiceDelegate {
-    func voiceSelected(voice: Voice) {
-        lblVoice.text = voice.name
-        setting?.voice = voice
-        delegate?.settingChanged(setting: setting)
-        
-    }
-}
+//extension SettingsVC: VoiceDelegate {
+//    func voiceSelected(selectedMainVoice: AVSpeechSynthesisVoice, voice: Voice) {
+//        lblVoice.text = voice.name
+//        setting?.voice = voice
+//        delegate?.settingChanged(setting: setting)
+//    }
+//}

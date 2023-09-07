@@ -901,7 +901,7 @@
                                 <rect key="frame" x="0.0" y="659" width="393" height="134"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ONb-Q5-ykt">
-                                        <rect key="frame" x="177.66666666666666" y="15" width="38" height="60"/>
+                                        <rect key="frame" x="177.66666666666666" y="16" width="38" height="60"/>
                                         <fontDescription key="fontDescription" name="SFProRounded-Bold" family="SF Pro Rounded" pointSize="40"/>
                                         <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
                                         <state key="normal" title="􀊄">
@@ -919,7 +919,7 @@
                                         </constraints>
                                         <fontDescription key="fontDescription" name="SFProRounded-Regular" family="SF Pro Rounded" pointSize="35"/>
                                         <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                        <state key="normal" title="􀎄">
+                                        <state key="normal" title="􀎀">
                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </state>
                                         <connections>
@@ -930,7 +930,7 @@
                                         <rect key="frame" x="245.66666666666663" y="25" width="40" height="40"/>
                                         <fontDescription key="fontDescription" name="SFProRounded-Regular" family="SF Pro Rounded" pointSize="35"/>
                                         <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                        <state key="normal" title="􀎃">
+                                        <state key="normal" title="􀍿">
                                             <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </state>
                                         <connections>
@@ -938,7 +938,7 @@
                                         </connections>
                                     </button>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fCC-C0-NWI">
-                                        <rect key="frame" x="27" y="31" width="44" height="44"/>
+                                        <rect key="frame" x="27" y="21" width="44" height="44"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bdq-MF-Dch">
                                                 <rect key="frame" x="0.0" y="0.0" width="44" height="44"/>
@@ -970,7 +970,7 @@
                                         </userDefinedRuntimeAttributes>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Qop-Bq-kYh">
-                                        <rect key="frame" x="322" y="31" width="44" height="44"/>
+                                        <rect key="frame" x="322" y="21" width="44" height="44"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EoB-vu-ewV">
                                                 <rect key="frame" x="0.0" y="0.0" width="44" height="44"/>
@@ -1008,7 +1008,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Speed" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CW7-d6-jBy">
-                                        <rect key="frame" x="328.66666666666669" y="80" width="31" height="13"/>
+                                        <rect key="frame" x="328.66666666666669" y="70" width="31" height="13"/>
                                         <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="11"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
@@ -1017,7 +1017,6 @@
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstItem="Qop-Bq-kYh" firstAttribute="centerY" secondItem="bdq-MF-Dch" secondAttribute="centerY" id="2UN-5f-1gV"/>
-                                    <constraint firstItem="fCC-C0-NWI" firstAttribute="top" secondItem="d9f-h9-15Y" secondAttribute="top" constant="31" id="3Zt-fC-2Zm"/>
                                     <constraint firstItem="Jjz-XQ-exB" firstAttribute="top" secondItem="fCC-C0-NWI" secondAttribute="bottom" constant="5" id="6tl-jt-jCI"/>
                                     <constraint firstItem="era-Fm-pRg" firstAttribute="leading" secondItem="ONb-Q5-ykt" secondAttribute="trailing" constant="30" id="7ZE-Tf-eTn"/>
                                     <constraint firstItem="CW7-d6-jBy" firstAttribute="top" secondItem="Qop-Bq-kYh" secondAttribute="bottom" constant="5" id="Bhp-R3-4V1"/>
@@ -1034,15 +1033,11 @@
                                     <constraint firstItem="ONb-Q5-ykt" firstAttribute="centerY" secondItem="bdq-MF-Dch" secondAttribute="centerY" constant="3" id="qq3-MC-JQ7"/>
                                     <constraint firstItem="CW7-d6-jBy" firstAttribute="centerX" secondItem="EoB-vu-ewV" secondAttribute="centerX" id="tq5-Ha-duM"/>
                                     <constraint firstAttribute="height" constant="134" id="uw0-jZ-nbk"/>
-                                    <constraint firstItem="ONb-Q5-ykt" firstAttribute="centerY" secondItem="miH-Tj-AHZ" secondAttribute="centerY" id="vaG-kY-De3"/>
                                     <constraint firstItem="ONb-Q5-ykt" firstAttribute="leading" secondItem="miH-Tj-AHZ" secondAttribute="trailing" constant="30" id="wvS-TB-qoo"/>
                                 </constraints>
                                 <variation key="default">
                                     <mask key="subviews">
-                                        <exclude reference="fCC-C0-NWI"/>
-                                        <exclude reference="Qop-Bq-kYh"/>
                                         <exclude reference="Jjz-XQ-exB"/>
-                                        <exclude reference="CW7-d6-jBy"/>
                                     </mask>
                                 </variation>
                             </view>
@@ -1060,6 +1055,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="btnPlay" destination="ONb-Q5-ykt" id="XMt-Oq-o7G"/>
                         <outlet property="btnSpeed" destination="EoB-vu-ewV" id="2BQ-s9-UJn"/>
                         <outlet property="txtVBook" destination="bY8-bY-JlS" id="VPL-IN-pDO"/>
                     </connections>

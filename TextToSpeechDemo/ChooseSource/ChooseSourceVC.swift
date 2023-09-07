@@ -46,7 +46,7 @@ class ChooseSourceVC: UIViewController {
             }, btnOneTitle: "Cancel", btnOneTapped: nil, btnTwoTitle: "Enter") { action in
                 if self.verifyUrl(urlString: self.txtEnterWebsiteLink?.text!) {
                     if !(self.txtEnterWebsiteLink?.text?.isEmpty ?? false) {
-                        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookVC") as! BookVC
+                        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookTestVC") as! BookTestVC
                         vc.sourceType = .insertWebsiteLink
                         vc.websiteURL = URL(string: self.txtEnterWebsiteLink?.text ?? "")!
                         self.navigationController?.pushViewController(vc, animated: true)
@@ -97,7 +97,7 @@ extension ChooseSourceVC: UIImagePickerControllerDelegate, UINavigationControlle
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
         dismiss(animated:true, completion: {
-            let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookVC") as! BookVC
+            let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookTestVC") as! BookTestVC
             vc.image = info[.originalImage] as? UIImage
             vc.sourceType = .scanPages
             self.navigationController?.pushViewController(vc, animated: true)
@@ -116,7 +116,7 @@ extension ChooseSourceVC: UIDocumentPickerDelegate {
         print("import result : \(myURL)")
         
         //.. Import iCloud File
-        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookVC") as! BookVC
+        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "BookTestVC") as! BookTestVC
         vc.sourceType = .importICloudLink
         vc.pdfURL = myURL
         self.navigationController?.pushViewController(vc, animated: true)
