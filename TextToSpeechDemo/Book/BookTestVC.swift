@@ -11,11 +11,13 @@ import SwiftSoup
 import PDFKit
 import AVFoundation
 import AVKit
+import NaturalLanguage
 
 enum SpeechControls {
     case none
     case forwards
     case backwards
+    case continuePlaying
 }
 
 enum SourceType {
@@ -23,6 +25,12 @@ enum SourceType {
     case copyPaste
     case insertWebsiteLink
     case importICloudLink
+}
+
+enum PickerType {
+    case none
+    case voice
+    case speed
 }
 
 struct WordSegment {
@@ -48,7 +56,7 @@ extension String {
     }
 }
 class BookTestVC: UIViewController {
-
+    
     @IBOutlet weak var txtVBook: GrowingTextView!
     @IBOutlet weak var btnSpeed: UIButton!
     @IBOutlet weak var btnPlay: UIButton!
@@ -56,8 +64,9 @@ class BookTestVC: UIViewController {
     var image = UIImage(named: "book")
     var websiteURL = URL(string: "https://www.rakiyaworld.com/blog/dummy-text")!
     var pdfURL: URL?
-
+    var ranges: [Range<String.Index>] = []
     var sourceType: SourceType = .scanPages
+    var currentPlayingSentenceIndex = 0
     
     var speechSynthesizer: AVSpeechSynthesizer?
     var arrVoices: [Voice] = []
@@ -75,28 +84,29 @@ class BookTestVC: UIViewController {
     private var sentences: [String] = []
     private var currentSentenceIndex: Int = 0
     
-
+    
     private var arrSpeeds: [String] = [
         "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"
     ]
     private var highlightedSentenceRange: NSRange?
     private var highlightedWordRange: NSRange?
-
+    
     var segments: [SpeechSegment] = []
     var totalLengthOfPreviousSentences = 0
-    var speechControls: SpeechControls = .none
+    var speechControls: SpeechControls = .continuePlaying
+    var pickerType: PickerType = .none
     
     var speechUtterance = AVSpeechUtterance()
-
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        getTheVoicesList()
         txtVBook.font = UIFont(name: Fonts.SFProRoundedRegular, size: CGFloat(Int(setting?.fontSize ?? 17)))!
         
         self.speechSynthesizer = AVSpeechSynthesizer()
         self.speechSynthesizer?.delegate = self
-
+        
         setting = Setting()
         
         if sourceType == .scanPages {
@@ -137,8 +147,9 @@ class BookTestVC: UIViewController {
         } else if sourceType == .copyPaste {
             txtVBook.placeholder = "Paste here or start typing..."
             txtVBook.text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged."
-
             
+            self.sentences = txtVBook.text.components(separatedBy: ". ")
+            self.addLineSpacingToTheText()
         } else if sourceType == .insertWebsiteLink {
             
             fetchWebsiteContent(url: websiteURL.absoluteString) { html, error in
@@ -146,7 +157,26 @@ class BookTestVC: UIViewController {
                     let extractedText = self.extractTextFromHTML(html: html)
                     DispatchQueue.main.async {
                         self.txtVBook.text = extractedText?.trimmingCharacters(in: .whitespaces)
-                        print(extractedText ?? "Couldn't extract text.")
+                        var sentencesArray: [String] = []
+                        let tokenizer = NLTokenizer(unit: .sentence)
+                        tokenizer.string = extractedText!
+                        
+                        tokenizer.enumerateTokens(in: extractedText!.startIndex..<extractedText!.endIndex) { (range, _) in
+                            let sentence = String(extractedText![range])
+                            if sentence != "\n" {
+                                sentencesArray.append(sentence)
+                            }
+                            return true
+                        }
+                        
+                        // Print the sentences
+                        for sentence in sentencesArray {
+                            print(sentence)
+                        }
+                        
+                        
+                        self.sentences = sentencesArray
+                        self.addLineSpacingToTheText()
                     }
                 } else {
                     print("Error fetching content: \(error?.localizedDescription ?? "Unknown error")")
@@ -158,9 +188,11 @@ class BookTestVC: UIViewController {
             let pdf = PDFDocument(url: self.pdfURL!)
             let finalStr = pdf!.string!.trim
             self.txtVBook.text = finalStr
+            self.sentences = txtVBook.text.components(separatedBy: ". ")
+            addLineSpacingToTheText()
         }
         
-        self.sentences = txtVBook.text.components(separatedBy: ". ")
+        
         var position = 0
         
         for sentence in self.sentences {
@@ -179,13 +211,26 @@ class BookTestVC: UIViewController {
             segments.append(SpeechSegment(text: sentence, range: range, words: words))
             position += sentence.count + 2 // +2 accounts for ". "
         }
-
+        
         
         print("-=-=--=-=-=--=-=--=-=-=-=-=-=-")
         print(segments)
         print(segments.count)
         print("-=-=--=-=-=--=-=--=-=-=-=-=-=-")
         
+    }
+    
+    func getTheVoicesList() {
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+        for voice in voices {
+            arrVoices.append(Voice(identifier: voice.identifier, language: voice.language, name: voice.name, quality: voice.quality.rawValue))
+            print("\(debugPrint(voice))")
+            
+            print("Voice identifier: \(voice.identifier), Language: \(voice.language), Name: \(voice.name), Quality: \(voice.quality.rawValue)")
+        }
+    }
+    
+    func addLineSpacingToTheText() {
         let attributedString1 = NSMutableAttributedString(string: txtVBook.text!)
         
         attributedString1.addAttribute(NSAttributedString.Key.font, value: UIFont(name: Fonts.SFProRoundedRegular, size: 17)!, range: NSRange(location: 0, length: attributedString1.length))
@@ -197,7 +242,6 @@ class BookTestVC: UIViewController {
         attributedString1.addAttribute(NSAttributedString.Key.paragraphStyle, value:paragraphStyle, range:NSMakeRange(0, attributedString1.length))
         
         txtVBook.attributedText = attributedString1
-
     }
     
     func extractTextFromHTML(html: String) -> String? {
@@ -230,7 +274,7 @@ class BookTestVC: UIViewController {
             return nil
         }
     }
-
+    
     
     func fetchWebsiteContent(url: String, completion: @escaping (String?, Error?) -> Void) {
         guard let url = URL(string: url) else {
@@ -258,7 +302,7 @@ class BookTestVC: UIViewController {
         
         txtVBook.attributedText = mutableAttributedString
     }
-  
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.speechSynthesizer?.stopSpeaking(at: .immediate)
@@ -271,7 +315,7 @@ class BookTestVC: UIViewController {
         speechUtterance.rate = Float(setting?.rate ?? utteranceRate)
         speechSynthesizer?.speak(speechUtterance)
     }
-  
+    
 }
 
 //MARK:- IBActions
@@ -280,7 +324,7 @@ extension BookTestVC {
     @IBAction func btnPlay(_ sender: UIButton) {
         
         isPlay = !isPlay
-        
+        speechControls = .continuePlaying
         if isPlay {
             sender.setNormalTitle(normalTitle: "􀊆")
             if speechSynthesizer?.isSpeaking ?? false {
@@ -289,40 +333,39 @@ extension BookTestVC {
                 self.speechSynthesizer?.stopSpeaking(at: .immediate)
                 self.speak(text: sentences[currentSentenceIndex])
             }
-            self.speechSynthesizer?.stopSpeaking(at: .immediate)
-            self.speak(text: sentences[currentSentenceIndex])
         } else {
             sender.setNormalTitle(normalTitle: "􀊄")
             self.speechSynthesizer?.pauseSpeaking(at: .immediate)
         }
         
-//        isPlay = !isPlay
-//
-//        if isPlay {
-//            sender.setNormalTitle(normalTitle: "􀊆")
-//            if speechSynthesizer.isSpeaking {
-//                speechSynthesizer.continueSpeaking()
-//            } else {
-//                self.speechSynthesizer.stopSpeaking(at: .immediate)
-//                self.speechManager.stop()
-//                self.speak(text: sentences[currentSentenceIndex])
-//            }
-//        } else {
-//            sender.setNormalTitle(normalTitle: "􀊄")
-//            self.speechSynthesizer.pauseSpeaking(at: .immediate)
-//        }
+        //        isPlay = !isPlay
+        //
+        //        if isPlay {
+        //            sender.setNormalTitle(normalTitle: "􀊆")
+        //            if speechSynthesizer.isSpeaking {
+        //                speechSynthesizer.continueSpeaking()
+        //            } else {
+        //                self.speechSynthesizer.stopSpeaking(at: .immediate)
+        //                self.speechManager.stop()
+        //                self.speak(text: sentences[currentSentenceIndex])
+        //            }
+        //        } else {
+        //            sender.setNormalTitle(normalTitle: "􀊄")
+        //            self.speechSynthesizer.pauseSpeaking(at: .immediate)
+        //        }
     }
     
     @IBAction func btnVoiceClicks(_ sender: UIButton) {
-        
         isPlay = false
+        speechControls = .none
         btnPlay.setNormalTitle(normalTitle: "􀊄")
         currentSentenceIndex = 0
         self.speechSynthesizer?.stopSpeaking(at: .immediate)
-
-        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "VoicesVC") as? VoicesVC
-        vc?.delegate = self
-        self.navigationController?.pushViewController(vc!, animated: true)
+        pickerType = .voice
+        showPickerInAlertController(type: .voice)
+        //        let vc = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "VoicesVC") as? VoicesVC
+        //        vc?.delegate = self
+        //        self.navigationController?.pushViewController(vc!, animated: true)
     }
     
     @IBAction func btnBackward(_ sender: UIButton) {
@@ -338,7 +381,8 @@ extension BookTestVC {
     }
     
     @IBAction func btnSpeed(_ sender: Any) {
-        showPickerInAlertController()
+        pickerType = .speed
+        showPickerInAlertController(type: .speed)
     }
 }
 extension BookTestVC: AVSpeechSynthesizerDelegate {
@@ -360,25 +404,24 @@ extension BookTestVC: AVSpeechSynthesizerDelegate {
         totalLengthOfPreviousSentences += utterance.speechString.count
         
         
-        if speechControls == .none || speechControls == .forwards {
+        if speechControls == .forwards || speechControls == .continuePlaying {
             if currentSentenceIndex  < sentences.count - 1 {
                 currentSentenceIndex += 1
-                self.isPlay = true
             } else {
-                isPlay = false
-                btnPlay.setNormalTitle(normalTitle: "􀊄")
                 self.speechSynthesizer?.stopSpeaking(at: .immediate)
             }
-        } else {
+            isPlay = true
+            self.btnPlay.setNormalTitle(normalTitle: "􀊆")
+            self.speak(text: sentences[currentSentenceIndex])
+        } else if speechControls == .backwards {
             if currentSentenceIndex > 0  {
                 currentSentenceIndex -= 1
-                self.isPlay = true
+                
             }
+            self.isPlay = true
+            self.btnPlay.setNormalTitle(normalTitle: "􀊆")
+            self.speak(text: sentences[currentSentenceIndex])
         }
-        
-        self.btnPlay.setNormalTitle(normalTitle: "􀊆")
-        self.speak(text: sentences[currentSentenceIndex])
-        
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
@@ -391,7 +434,7 @@ extension BookTestVC: AVSpeechSynthesizerDelegate {
         print("-=-=-=-=-==-==-=-=--===-==-=-=-=-==")
         print("DID CANCEL")
         print("-=-=-=-=-==-==-=-=--===-==-=-=-=-==")
-//        synthesizer.stopSpeaking(at: .immediate)
+        //        synthesizer.stopSpeaking(at: .immediate)
     }
     
     //..FINAL:
@@ -400,50 +443,50 @@ extension BookTestVC: AVSpeechSynthesizerDelegate {
                            willSpeakRangeOfSpeechString characterRange: NSRange,
                            utterance: AVSpeechUtterance) {
         
-//        let wordDelimiterSet = CharacterSet.alphanumerics.inverted
-//        let entireText = utterance.speechString as NSString
-//
-//        // Find the start of the word
-//        let startOfWord = entireText.rangeOfCharacter(from: wordDelimiterSet, options: .backwards, range: NSRange(location: 0, length: characterRange.location)).location
-//
-//        // Find the end of the word
-//        let endOfWord = entireText.rangeOfCharacter(from: wordDelimiterSet, options: .regularExpression, range: NSRange(location: characterRange.location, length: entireText.length - characterRange.location)).location
-//
-//        let wordRange: NSRange
-//        if startOfWord == NSNotFound {
-//            wordRange = NSRange(location: 0, length: (endOfWord == NSNotFound) ? characterRange.location + characterRange.length : endOfWord)
-//        } else {
-//            wordRange = NSRange(location: startOfWord + 1, length: ((endOfWord == NSNotFound) ? characterRange.location + characterRange.length : endOfWord) - startOfWord - 1)
-//        }
-//
-//        print("===========================================")
-//        print(utterance.speechString)
-//        print(entireText.substring(with: wordRange))
-//        print("===========================================")
-//        print("===========================================")
+        //        let wordDelimiterSet = CharacterSet.alphanumerics.inverted
+        //        let entireText = utterance.speechString as NSString
+        //
+        //        // Find the start of the word
+        //        let startOfWord = entireText.rangeOfCharacter(from: wordDelimiterSet, options: .backwards, range: NSRange(location: 0, length: characterRange.location)).location
+        //
+        //        // Find the end of the word
+        //        let endOfWord = entireText.rangeOfCharacter(from: wordDelimiterSet, options: .regularExpression, range: NSRange(location: characterRange.location, length: entireText.length - characterRange.location)).location
+        //
+        //        let wordRange: NSRange
+        //        if startOfWord == NSNotFound {
+        //            wordRange = NSRange(location: 0, length: (endOfWord == NSNotFound) ? characterRange.location + characterRange.length : endOfWord)
+        //        } else {
+        //            wordRange = NSRange(location: startOfWord + 1, length: ((endOfWord == NSNotFound) ? characterRange.location + characterRange.length : endOfWord) - startOfWord - 1)
+        //        }
+        //
+        //        print("===========================================")
+        //        print(utterance.speechString)
+        //        print(entireText.substring(with: wordRange))
+        //        print("===========================================")
+        //        print("===========================================")
         
-//        let entireText1 = txtVBook.text!//"Lorem Ipsum is simply dummy text of the printing and typesetting industry. The industry is since 1995 and its doing great right now."
-//        let targetWord = entireText.substring(with: wordRange)//"dummy"
-//        let attributedString1 = NSMutableAttributedString(string: entireText1)
-//
-//        // Set the background color for the entire string to light green
-//        let entireRange = NSRange(entireText1.startIndex..<entireText1.endIndex, in: entireText1)
-//        attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.white, range: entireRange)
-//
-//        // Find the range of the first sentence and set its background color to yellow
-//        if let endOfSentenceLocation = entireText1.firstIndex(of: ".") {
-//            let firstSentenceRange = entireText1.startIndex...endOfSentenceLocation
-//            let nsFirstSentenceRange = NSRange(firstSentenceRange, in: entireText1)
-//            attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.2), range: nsFirstSentenceRange)
-//        }
-//
-//        // Set background color for "dummy" to red
-//        if let range = entireText1.range(of: targetWord) {
-//            let nsRange = NSRange(range, in: entireText1)
-//            attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.4), range: nsRange)
-//        }
-//
-//        txtVBook.attributedText = attributedString1
+        //        let entireText1 = txtVBook.text!//"Lorem Ipsum is simply dummy text of the printing and typesetting industry. The industry is since 1995 and its doing great right now."
+        //        let targetWord = entireText.substring(with: wordRange)//"dummy"
+        //        let attributedString1 = NSMutableAttributedString(string: entireText1)
+        //
+        //        // Set the background color for the entire string to light green
+        //        let entireRange = NSRange(entireText1.startIndex..<entireText1.endIndex, in: entireText1)
+        //        attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.white, range: entireRange)
+        //
+        //        // Find the range of the first sentence and set its background color to yellow
+        //        if let endOfSentenceLocation = entireText1.firstIndex(of: ".") {
+        //            let firstSentenceRange = entireText1.startIndex...endOfSentenceLocation
+        //            let nsFirstSentenceRange = NSRange(firstSentenceRange, in: entireText1)
+        //            attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.2), range: nsFirstSentenceRange)
+        //        }
+        //
+        //        // Set background color for "dummy" to red
+        //        if let range = entireText1.range(of: targetWord) {
+        //            let nsRange = NSRange(range, in: entireText1)
+        //            attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.4), range: nsRange)
+        //        }
+        //
+        //        txtVBook.attributedText = attributedString1
         
         let entireText = utterance.speechString as NSString
         let wordDelimiterSet = CharacterSet.alphanumerics.inverted
@@ -470,7 +513,10 @@ extension BookTestVC: AVSpeechSynthesizerDelegate {
             // Highlight the entire sentence
             let nsSentenceRange = NSRange(sentenceRangeInFullText, in: entireText1)
             attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.2), range: nsSentenceRange)
-            
+            DispatchQueue.main.async {
+                self.txtVBook.scrollRangeToVisible(nsSentenceRange)
+                self.view.layoutIfNeeded()
+            }
             // Highlight the current word
             attributedString1.addAttribute(NSAttributedString.Key.backgroundColor, value: UIColor.hexStringToUIColor(hex: "007BFF").withAlphaComponent(0.4), range: adjustedRange)
         }
@@ -482,13 +528,12 @@ extension BookTestVC: AVSpeechSynthesizerDelegate {
         paragraphStyle.lineSpacing = 15 // Whatever line spacing you want in points
         
         attributedString1.addAttribute(NSAttributedString.Key.paragraphStyle, value:paragraphStyle, range:NSMakeRange(0, attributedString1.length))
-
-
-        txtVBook.attributedText = attributedString1
-
- 
+        
+        DispatchQueue.main.async {
+            self.txtVBook.attributedText = attributedString1
+        }
     }
-     
+    
 }
 
 extension BookTestVC: GrowingTextViewDelegate {
@@ -533,10 +578,10 @@ extension BookTestVC: VoiceDelegate {
 
 extension BookTestVC {
     
-    func showPickerInAlertController() {
+    func showPickerInAlertController(type: PickerType) {
         
         // Create a UIAlertController with a custom content view
-        let alertController = UIAlertController(title: "Playback Speed:", message: "\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
+        let alertController = UIAlertController(title: type == .speed ? "Playback Speed:" : "Select voice", message: "\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
         //uncomment for iPad Support
         alertController.popoverPresentationController?.sourceView = self.view
         alertController.popoverPresentationController?.sourceRect = CGRectMake(CGRectGetMidX(self.view.bounds), CGRectGetMidY(self.view.bounds),0,0)
@@ -554,17 +599,28 @@ extension BookTestVC {
         alertController.view.addSubview(pickerView)
         
         CGCDMainThread.asyncAfter(deadline: .now() + 0.5, execute: {
-            if let index = self.arrSpeeds.firstIndex(where: {$0 == "0.5"}) {
-                pickerView.selectRow(index, inComponent: 0, animated: true)
+            if type == .speed {
+                if let index = self.arrSpeeds.firstIndex(where: {$0 == "\(self.setting?.rate ?? 0.5)"}) {
+                    pickerView.selectRow(index, inComponent: 0, animated: true)
+                }
+            } else {
+                if let index = self.arrVoices.firstIndex(where: {$0.name == self.setting?.voice?.name}) {
+                    pickerView.selectRow(index, inComponent: 0, animated: true)
+                }
             }
+            
         })
         
         alertController.addAction(UIAlertAction(title: "Confirm", style: .default, handler: { _ in
             let value = pickerView.selectedRow(inComponent: 0)
-            print("Feet: \(value)")
-            let val = Double("0.\(value)") ?? 0.5
-            self.setting?.rate = val
-            self.btnSpeed.setNormalTitle(normalTitle: "\(val)x")
+            if type == .speed {
+                print("Feet: \(value)")
+                let val = Double("0.\(value)") ?? 0.5
+                self.setting?.rate = val
+                self.btnSpeed.setNormalTitle(normalTitle: "\(val)x")
+            } else {
+                self.setting?.voice = self.arrVoices[value]
+            }
         }))
         
         // Add the cancel and confirm buttons
@@ -584,7 +640,7 @@ extension BookTestVC: UIPickerViewDelegate, UIPickerViewDataSource {
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         let row = pickerView.selectedRow(inComponent: 0)
         print("this is the pickerView\(row)")
-        return arrSpeeds.count
+        return pickerType == .speed ? arrSpeeds.count : arrVoices.count
     }
     
     func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
@@ -596,8 +652,13 @@ extension BookTestVC: UIPickerViewDelegate, UIPickerViewDataSource {
         label.font = UIFont(name: Fonts.SFProRoundedSemibold, size: 18)
         
         // where data is an Array of String
-        label.text = "\(arrSpeeds[row])"
-
+        if pickerType == .voice {
+            let objVoice = arrVoices[row]
+            label.text = "\(objVoice.name)"
+        } else {
+            label.text = "\(arrSpeeds[row])"
+        }
+        
         return label
     }
     
